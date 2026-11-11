@@ -13,7 +13,7 @@ export function Topbar() {
   return (
     <header className="bg-background/90 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30 flex h-16 items-center gap-2 border-b px-4 backdrop-blur md:px-6">
       <MobileMenu />
-      <Brand collapsed className="md:hidden" />
+      <Brand collapsed size="sm" priority className="md:hidden" />
       <div className="relative ml-2 hidden max-w-sm flex-1 md:block">
         <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <input

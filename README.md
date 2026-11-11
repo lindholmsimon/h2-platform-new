@@ -278,6 +278,7 @@ supabase/
 └── tests/                    # Databastester (npm run test:db)
 src/
 ├── app/(platform)/           # Routes. layout.tsx väljer demoläge eller säkert läge
+├── assets/brand/             # Logotyp (ljus/mörk variant + märke). Favicon/ikoner i src/app/
 │   └── administration/       # anvandare, historik, integrationer, installningar
 ├── components/
 │   ├── admin/                # Adminvyer + access/ (användarpanel, rollredigerare, behörigheter)

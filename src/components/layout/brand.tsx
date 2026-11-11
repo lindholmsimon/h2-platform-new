@@ -1,17 +1,50 @@
+import Image from "next/image";
+
+import logoDark from "@/assets/brand/logo-dark.png";
+import logoLight from "@/assets/brand/logo-light.png";
+import mark from "@/assets/brand/mark.png";
 import { cn } from "@/lib/utils";
 
-export function Brand({ collapsed = false, className }: { collapsed?: boolean; className?: string }) {
+const ALT = "Hanssons Hus AB Entreprenad";
+
+const SIZES = {
+  sm: "h-8",
+  md: "h-11",
+  lg: "h-16",
+} as const;
+
+/**
+ * Företagets logotyp.
+ *
+ * - Hel logotyp: separata varianter för ljust och mörkt tema (svart resp. vit
+ *   text), växlas med CSS så att rätt variant visas direkt utan flimmer.
+ * - `collapsed`: endast märket (hopfälld sidomeny, mobilens toppfält).
+ */
+export function Brand({
+  collapsed = false,
+  size = "md",
+  priority = false,
+  className,
+}: {
+  collapsed?: boolean;
+  size?: keyof typeof SIZES;
+  priority?: boolean;
+  className?: string;
+}) {
+  const height = SIZES[size];
+
+  if (collapsed) {
+    return (
+      <span className={cn("flex shrink-0 items-center", className)}>
+        <Image src={mark} alt={ALT} priority={priority} className={cn(height, "w-auto")} />
+      </span>
+    );
+  }
+
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
-      <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold tracking-tight">
-        H2
-      </div>
-      {!collapsed && (
-        <div className="flex min-w-0 flex-col leading-tight">
-          <span className="truncate text-sm font-semibold">H2 Entreprenad</span>
-          <span className="text-muted-foreground truncate text-xs">Intern plattform</span>
-        </div>
-      )}
-    </div>
+    <span className={cn("flex shrink-0 items-center", className)}>
+      <Image src={logoLight} alt={ALT} priority={priority} className={cn(height, "w-auto dark:hidden")} />
+      <Image src={logoDark} alt={ALT} priority={priority} className={cn(height, "hidden w-auto dark:block")} />
+    </span>
   );
 }
