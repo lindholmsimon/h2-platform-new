@@ -8,7 +8,7 @@ import { Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { isActive, NAV_GROUPS } from "@/config/modules";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 import { Brand } from "./brand";
 import { NavLinks } from "./nav-links";

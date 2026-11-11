@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { INTEGRATIONS, type IntegrationDefinition } from "@/integrations";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 const LOGO: Record<IntegrationDefinition["id"], { label: string; className: string }> = {
@@ -61,7 +61,7 @@ export function IntegrationsAdmin() {
               </CardContent>
               <CardFooter>
                 <Button className="w-full" variant="outline" disabled title="Ansluts i en senare fas">
-                  {can("admin.integrations") ? "Anslut (kommer snart)" : "Kräver administratör"}
+                  {can("integrations.manage") ? "Anslut (kommer snart)" : "Kräver administratör"}
                 </Button>
               </CardFooter>
             </Card>

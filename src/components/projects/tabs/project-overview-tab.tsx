@@ -4,7 +4,6 @@ import { Progress } from "@/components/ui/progress";
 import { DEMO_NOW } from "@/data/demo";
 import type { Project } from "@/data/demo/projects";
 import { getUser } from "@/data/demo/users";
-import { ROLES } from "@/lib/auth/roles";
 import { formatRelative } from "@/lib/utils";
 
 export function ProjectOverviewTab({ project }: { project: Project }) {
@@ -62,8 +61,7 @@ export function ProjectOverviewTab({ project }: { project: Project }) {
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{u.name}</span>
                       <span className="text-muted-foreground text-xs">
-                        {u.title}
-                        {u.title !== ROLES[u.roleId].name && ` · ${ROLES[u.roleId].name}`}
+                        {u.title} · {u.department}
                       </span>
                     </div>
                   </li>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { DEMO_NOW } from "@/data/demo";
 import { DEMO_PROJECTS } from "@/data/demo/projects";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { cn, formatRelative } from "@/lib/utils";
 
 export function MyTasksWidget() {

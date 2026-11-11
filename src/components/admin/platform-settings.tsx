@@ -9,11 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 
 export function PlatformSettings() {
   const { can } = useSession();
-  const disabled = !can("admin.settings");
+  const disabled = !can("settings.manage");
 
   return (
     <>
