@@ -9,7 +9,7 @@ import { Brand } from "./brand";
 export function SecureModeGate() {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-8 p-6">
-      <Brand />
+      <Brand size="lg" priority />
       <div className="bg-card flex w-full max-w-md flex-col items-center gap-4 rounded-xl border p-8 text-center shadow-xs">
         <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
           <LockKeyhole className="size-5" />

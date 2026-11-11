@@ -17,7 +17,7 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
       )}
     >
       <div className={cn("flex h-16 items-center px-4", collapsed && "justify-center px-2")}>
-        <Brand collapsed={collapsed} />
+        <Brand collapsed={collapsed} priority />
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-4">
         <NavLinks collapsed={collapsed} />
