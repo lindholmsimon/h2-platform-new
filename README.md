@@ -37,7 +37,7 @@ npm run dev
 | `npm run typecheck` | TypeScript-kontroll                                          |
 | `npm run test:db`   | Kör databasmigrationerna och testar RLS och skyddsregler     |
 
-`npm run test:db` kör alla migrationer i [PGlite](https://pglite.dev) (Postgres i WebAssembly), alltså utan Docker eller molntjänst. Testerna kontrollerar bland annat att anonyma användare saknar åtkomst, att ingen kan ändra sina egna roller, att behörigheter inte kan delas ut "uppåt", att den sista systemadministratören skyddas och att aktivitetsloggen inte kan ändras.
+`npm run test:db` kör alla migrationer i [PGlite](https://pglite.dev) (Postgres i WebAssembly), alltså utan Docker eller molntjänst. Testerna kontrollerar bland annat att anonyma användare och `service_role` saknar åtkomst, att ingen kan ändra sina egna roller, att behörigheter inte kan delas ut "uppåt", att den sista systemadministratören skyddas och att aktivitetsloggen inte kan ändras.
 
 ## Lägen: demo och säkert
 
@@ -81,42 +81,82 @@ Se `.env.example`. För lokal utveckling kopierar du den till `.env.local`.
 
 ## Ansluta Supabase
 
-Gratisplanen räcker för det här steget och kostar inget.
+Produktionsprojektet är **h2-platform-new** (`yaoxvulxifmlxgfgerew`, North EU / Stockholm). Gratisplanen räcker för det här steget.
 
-1. **Skapa projektet** på [supabase.com](https://supabase.com) i en EU-region, till exempel *North EU (Stockholm)* eller *Central EU (Frankfurt)*. Spara databaslösenordet i en lösenordshanterare.
-2. **Kör migrationerna** med Supabase CLI (`npx` räcker, ingen global installation behövs):
+### Migrationer via GitHub-integrationen (rekommenderat)
 
-   ```bash
-   npx supabase login
-   ```
+GitHub är källan till sanningen: Supabase kör nya filer i `supabase/migrations/` när de mergas till `main`. Inga lösenord eller nycklar behövs i GitHub eller i koden.
 
-   ```bash
-   npx supabase link --project-ref <projekt-ref>
-   ```
-
-   ```bash
-   npx supabase db push
-   ```
-
-   Alternativt kan du klistra in filerna i `supabase/migrations/` i SQL-editorn i Supabase, **en i taget och i nummerordning**.
-
-   Kör **inte** `supabase/seed.sql` mot det riktiga projektet. Den innehåller fiktiva testanvändare och används bara lokalt med `npx supabase start` / `npx supabase db reset` (som kräver Docker).
-3. **Kontrollera säkerheten:** gå igenom *Advisors → Security Advisor* och åtgärda eventuella varningar. RLS ska vara aktiverat på alla tabeller (*Table Editor* visar det).
+1. I Supabase: *Project Settings → Integrations → GitHub → Connect*.
+   - Repository: `lindholmsimon/h2-platform-new`
+   - Supabase-katalog: `.` (repots rot, där mappen `supabase/` ligger)
+   - Produktionsbranch: `main`
+   - Slå på *Deploy to production*. Lämna *Automatic branching* avstängt (preview-databaser kostar extra).
+2. Granska och merga pull requesten. Migrationerna körs i nummerordning, och resultatet syns under *Integrations → GitHub*.
+3. **Kontrollera säkerheten:** gå igenom *Advisors → Security Advisor* och åtgärda eventuella varningar. RLS ska vara aktiverat på alla tabeller.
 4. **Lägg in miljövariablerna** `NEXT_PUBLIC_SUPABASE_URL` och `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (från *Project Settings → API*) i Vercel. De används först när inloggningen är aktiverad.
-5. **Utse första systemadministratören.** Det görs bara när inloggningen är klar, i SQL-editorn i Supabase (kan inte göras via API eller webbplatsen):
 
-   ```sql
-   select private.bootstrap_system_admin(
-     'fornamn.efternamn@h2entreprenad.se',  -- e-post
-     'Förnamn Efternamn',                    -- namn
-     '<tenant-id>'::uuid,                    -- Entra ID tenant (tid)
-     '<object-id>'::uuid                     -- användarens object-ID (oid)
-   );
-   ```
+Kör inte migrationerna på något annat sätt vid sidan av integrationen, till exempel genom att klistra in dem i SQL-editorn. Då stämmer inte migrationshistoriken med filerna längre, och integrationen försöker köra dem igen.
 
-   Funktionen fungerar bara när det inte finns någon aktiv systemadministratör. Därefter hanteras alla roller via adminpanelen.
+### Alternativ: Supabase CLI från egen dator
 
-**Nya migrationer** skapas med `npx supabase migration new <namn>`. Kör sedan `npm run test:db` och `npx supabase db push`. Ändras behörighetskatalogen måste `src/lib/auth/permissions.ts` uppdateras också, och testet kontrollerar att de stämmer överens.
+Databaslösenordet anges bara i din egen terminal.
+
+```bash
+npx supabase login
+```
+
+```bash
+npx supabase link --project-ref yaoxvulxifmlxgfgerew
+```
+
+```bash
+npx supabase db push --dry-run
+```
+
+```bash
+npx supabase db push
+```
+
+### Seed-data (`supabase/seed.sql`)
+
+`seed.sql` innehåller **fiktiva** testanvändare och är bara till för lokal utveckling. Den körs aldrig mot produktion:
+
+- `supabase/config.toml` stänger av seed för produktionsprojektet (`[remotes.production.db.seed] enabled = false`).
+- `supabase db push` kör inte seed-filen (kräver flaggan `--include-seed`, som aldrig ska användas här).
+- GitHub-integrationen kör inte seed-filen mot produktionsdatabasen.
+
+Lokalt (kräver Docker) körs den automatiskt efter migrationerna:
+
+```bash
+npx supabase start
+```
+
+```bash
+npx supabase db reset
+```
+
+### Första systemadministratören
+
+Görs först när inloggningen är klar, i SQL-editorn i Supabase. Det kan inte göras via API eller webbplatsen:
+
+```sql
+select private.bootstrap_system_admin(
+  'fornamn.efternamn@h2entreprenad.se',  -- e-post
+  'Förnamn Efternamn',                    -- namn
+  '<tenant-id>'::uuid,                    -- Entra ID tenant (tid)
+  '<object-id>'::uuid                     -- användarens object-ID (oid)
+);
+```
+
+Funktionen fungerar bara när det inte finns någon aktiv systemadministratör. Därefter hanteras alla roller via adminpanelen.
+
+### Nya migrationer
+
+Skapa filen med `npx supabase migration new <namn>`, kör `npm run test:db` och öppna en pull request. Integrationen kör den när PR:en mergas.
+
+- Ändras behörighetskatalogen måste `src/lib/auth/permissions.ts` uppdateras också. Testet kontrollerar att de stämmer överens.
+- **Nya tabeller och funktioner i `public`** får som standard alla rättigheter för `anon`, `authenticated` och `service_role`. Lägg alltid till `revoke` och en avgränsad `grant` i samma migration, på samma sätt som i migration 3 och 5.
 
 ## Databasstruktur
 
@@ -202,6 +242,7 @@ Behörigheter kontrolleras i tre lager. Gränssnittet döljer bara knappar. Det 
 - Den sista aktiva systemadministratören kan inte tas bort eller inaktiveras. Ändringar serialiseras med ett transaktionslås, så detta kan inte kringgås med samtidiga anrop.
 - Man kan inte utöka behörigheterna för en roll man själv har.
 - Profiler kan inte raderas, bara inaktiveras. Inaktiva användare har inga behörigheter.
+- **`service_role` har inga rättigheter** till tabellerna eller admin-funktionerna (migration 5). Supabase ger annars rollen fulla rättigheter som standard, och den går förbi RLS. Utan begränsningen skulle den som har service_role-nyckeln kunna ändra roller förbi reglerna och skriva falska poster i loggen. Supabase Dashboard och Auth påverkas inte.
 
 **Avstängt tills inloggning finns:** `AUTHENTICATION_IMPLEMENTED` och `REAL_ADMIN_OPERATIONS_ENABLED` i `src/server/config/security-flags.ts` är konstanter i koden, inte miljövariabler, och står på `false`. Serveråtgärderna i `src/server/admin/actions.ts` är dessutom inte kopplade till gränssnittet ännu. Det finns ingen endpoint som kan ge administratörsbehörighet.
 

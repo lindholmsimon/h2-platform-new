@@ -24,8 +24,8 @@ let db;
 /** Kör SQL som en API-roll (anon/authenticated) i en transaktion som alltid rullas tillbaka. */
 async function as(who, sql, params = []) {
   return db.transaction(async (tx) => {
-    if (who === "anon") {
-      await tx.exec("set local role anon");
+    if (who === "anon" || who === "service_role") {
+      await tx.exec(`set local role ${who}`);
     } else {
       await tx.query("select set_config('request.jwt.claim.sub', $1, true)", [AUTH[who]]);
       await tx.exec("set local role authenticated");
@@ -88,6 +88,50 @@ describe("anonyma användare", () => {
 
   test("kan inte anropa bootstrap", async () => {
     await assert.rejects(as("anon", "select private.bootstrap_system_admin('x@demo.example', 'X')"), /permission denied/);
+  });
+});
+
+describe("service_role", () => {
+  for (const table of ["profiles", "roles", "permissions", "role_permissions", "user_roles", "audit_log"]) {
+    test(`kan inte läsa eller skriva ${table}`, async () => {
+      await assert.rejects(as("service_role", `select * from public.${table}`), /permission denied/);
+      await assert.rejects(as("service_role", `delete from public.${table}`), /permission denied/);
+    });
+  }
+
+  test("kan inte göra någon till systemadministratör direkt i tabellen", async () => {
+    await assert.rejects(
+      as("service_role", "insert into public.user_roles (profile_id, role_id) values ($1, $2)", [ID.omar, await roleId("system_admin")]),
+      /permission denied/,
+    );
+  });
+
+  test("kan inte skriva falska poster i aktivitetsloggen", async () => {
+    await assert.rejects(
+      as("service_role", "insert into public.audit_log (action, target_type, summary) values ('x', 'system', 'falsk')"),
+      /permission denied/,
+    );
+  });
+
+  test("kan inte anropa admin-funktionerna eller my_access", async () => {
+    await assert.rejects(as("service_role", "select public.my_access()"), /permission denied/);
+    for (const call of [
+      "public.admin_assign_role($1, $1)",
+      "public.admin_revoke_role($1, $1)",
+      "public.admin_set_profile_status($1, 'inactive')",
+      "public.admin_delete_role($1)",
+    ]) {
+      await assert.rejects(as("service_role", `select ${call}`, [ID.omar]), /permission denied/);
+    }
+    await assert.rejects(as("service_role", "select public.admin_create_role('x_role', 'X', '', array[]::text[])"), /permission denied/);
+    await assert.rejects(
+      as("service_role", "select public.admin_update_role($1, 'X', '', array[]::text[])", [ID.omar]),
+      /permission denied/,
+    );
+  });
+
+  test("kan inte anropa bootstrap", async () => {
+    await assert.rejects(as("service_role", "select private.bootstrap_system_admin('x@demo.example', 'X')"), /permission denied/);
   });
 });
 

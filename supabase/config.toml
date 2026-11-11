@@ -1,3 +1,24 @@
-# Minimal konfiguration för Supabase CLI (lokal utveckling: `supabase start`).
-# Övriga inställningar använder CLI:ns standardvärden.
+# Konfiguration för Supabase CLI och Supabases GitHub-integration.
+# Inställningar som inte anges här använder CLI:ns standardvärden.
 project_id = "h2-platform"
+
+# -----------------------------------------------------------------------------
+# Seed-data: FIKTIVA testanvändare för LOKAL utveckling.
+# Körs automatiskt efter migrationerna vid `npx supabase db reset` (lokalt).
+# `supabase db push` kör aldrig seed-filen utan flaggan --include-seed.
+# -----------------------------------------------------------------------------
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+# -----------------------------------------------------------------------------
+# Produktionsprojektet h2-platform-new (Stockholm, eu-north-1).
+# Inställningar under [remotes.production] gäller endast detta projekt och
+# ersätter motsvarande inställningar ovan.
+# -----------------------------------------------------------------------------
+[remotes.production]
+project_id = "yaoxvulxifmlxgfgerew"
+
+# Seed-filen får aldrig köras mot produktionsdatabasen.
+[remotes.production.db.seed]
+enabled = false
