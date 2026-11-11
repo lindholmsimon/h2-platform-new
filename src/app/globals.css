@@ -41,70 +41,78 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* H2 Entreprenad – neutral bas med djupblå accent */
+/*
+ * Hanssons Hus AB Entreprenad – färgprofil hämtad från logotypen:
+ * orange (logo: oklch 0.675 0.145 58) och svart, med varma neutrala gråtoner.
+ *
+ * Ljust tema: primärfärgen är en djupare nyans av logotypens orange så att
+ * vit text på knappar når WCAG AA (≥ 4.5:1).
+ * Mörkt tema: logotypens orange med mörk text (≈ 7:1).
+ * Varning är guldgul för att inte förväxlas med primärfärgen.
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0.002 247);
-  --foreground: oklch(0.2 0.02 255);
+  --radius: 0.5rem;
+  --background: oklch(0.985 0.003 75);
+  --foreground: oklch(0.2 0.008 60);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 255);
+  --card-foreground: oklch(0.2 0.008 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 255);
-  --primary: oklch(0.45 0.13 255);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.96 0.006 250);
-  --secondary-foreground: oklch(0.25 0.02 255);
-  --muted: oklch(0.96 0.006 250);
-  --muted-foreground: oklch(0.52 0.02 255);
-  --accent: oklch(0.95 0.012 250);
-  --accent-foreground: oklch(0.25 0.03 255);
-  --destructive: oklch(0.58 0.22 27);
-  --success: oklch(0.6 0.14 155);
-  --warning: oklch(0.72 0.15 70);
-  --info: oklch(0.6 0.13 240);
-  --border: oklch(0.91 0.008 250);
-  --input: oklch(0.91 0.008 250);
-  --ring: oklch(0.55 0.13 255);
-  --sidebar: oklch(0.99 0.002 247);
-  --sidebar-foreground: oklch(0.3 0.02 255);
-  --sidebar-primary: oklch(0.45 0.13 255);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.95 0.012 250);
-  --sidebar-accent-foreground: oklch(0.22 0.03 255);
-  --sidebar-border: oklch(0.91 0.008 250);
-  --sidebar-ring: oklch(0.55 0.13 255);
+  --popover-foreground: oklch(0.2 0.008 60);
+  --primary: oklch(0.54 0.15 55);
+  --primary-foreground: oklch(0.99 0.002 75);
+  --secondary: oklch(0.96 0.005 75);
+  --secondary-foreground: oklch(0.25 0.01 60);
+  --muted: oklch(0.96 0.005 75);
+  --muted-foreground: oklch(0.5 0.012 65);
+  --accent: oklch(0.955 0.008 75);
+  --accent-foreground: oklch(0.25 0.01 60);
+  --destructive: oklch(0.53 0.2 27);
+  --success: oklch(0.5 0.13 150);
+  --warning: oklch(0.5 0.12 85);
+  --info: oklch(0.5 0.13 240);
+  --border: oklch(0.915 0.006 75);
+  --input: oklch(0.9 0.006 75);
+  --ring: oklch(0.62 0.14 55);
+  --sidebar: oklch(0.975 0.004 75);
+  --sidebar-foreground: oklch(0.32 0.01 60);
+  --sidebar-primary: oklch(0.54 0.15 55);
+  --sidebar-primary-foreground: oklch(0.99 0.002 75);
+  --sidebar-accent: oklch(0.94 0.007 75);
+  --sidebar-accent-foreground: oklch(0.2 0.008 60);
+  --sidebar-border: oklch(0.915 0.006 75);
+  --sidebar-ring: oklch(0.62 0.14 55);
 }
 
 .dark {
-  --background: oklch(0.16 0.015 255);
-  --foreground: oklch(0.96 0.005 250);
-  --card: oklch(0.2 0.018 255);
-  --card-foreground: oklch(0.96 0.005 250);
-  --popover: oklch(0.2 0.018 255);
-  --popover-foreground: oklch(0.96 0.005 250);
-  --primary: oklch(0.68 0.13 250);
-  --primary-foreground: oklch(0.16 0.02 255);
-  --secondary: oklch(0.26 0.02 255);
-  --secondary-foreground: oklch(0.96 0.005 250);
-  --muted: oklch(0.26 0.02 255);
-  --muted-foreground: oklch(0.7 0.02 255);
-  --accent: oklch(0.27 0.025 255);
-  --accent-foreground: oklch(0.96 0.005 250);
-  --destructive: oklch(0.65 0.2 25);
-  --success: oklch(0.7 0.14 155);
-  --warning: oklch(0.78 0.14 75);
-  --info: oklch(0.7 0.12 240);
+  --background: oklch(0.165 0.005 60);
+  --foreground: oklch(0.96 0.004 75);
+  --card: oklch(0.2 0.006 60);
+  --card-foreground: oklch(0.96 0.004 75);
+  --popover: oklch(0.2 0.006 60);
+  --popover-foreground: oklch(0.96 0.004 75);
+  --primary: oklch(0.72 0.15 57);
+  --primary-foreground: oklch(0.17 0.01 55);
+  --secondary: oklch(0.255 0.007 60);
+  --secondary-foreground: oklch(0.96 0.004 75);
+  --muted: oklch(0.255 0.007 60);
+  --muted-foreground: oklch(0.71 0.012 65);
+  --accent: oklch(0.265 0.008 60);
+  --accent-foreground: oklch(0.96 0.004 75);
+  --destructive: oklch(0.68 0.19 25);
+  --success: oklch(0.72 0.14 150);
+  --warning: oklch(0.82 0.14 88);
+  --info: oklch(0.72 0.12 240);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.6 0.12 250);
-  --sidebar: oklch(0.18 0.016 255);
-  --sidebar-foreground: oklch(0.9 0.01 250);
-  --sidebar-primary: oklch(0.68 0.13 250);
-  --sidebar-primary-foreground: oklch(0.16 0.02 255);
-  --sidebar-accent: oklch(0.26 0.022 255);
-  --sidebar-accent-foreground: oklch(0.96 0.005 250);
+  --ring: oklch(0.66 0.14 57);
+  --sidebar: oklch(0.185 0.006 60);
+  --sidebar-foreground: oklch(0.88 0.006 75);
+  --sidebar-primary: oklch(0.72 0.15 57);
+  --sidebar-primary-foreground: oklch(0.17 0.01 55);
+  --sidebar-accent: oklch(0.255 0.008 60);
+  --sidebar-accent-foreground: oklch(0.96 0.004 75);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.6 0.12 250);
+  --sidebar-ring: oklch(0.66 0.14 57);
 }
 
 @layer base {

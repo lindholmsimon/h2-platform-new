@@ -36,7 +36,7 @@ export function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolea
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-                    active && "bg-sidebar-accent text-sidebar-accent-foreground",
+                    active && "bg-sidebar-primary/10 text-sidebar-accent-foreground hover:bg-sidebar-primary/15",
                     collapsed && "justify-center px-0",
                   )}
                 >
