@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isActive, NAV_GROUPS } from "@/config/modules";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 export function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {

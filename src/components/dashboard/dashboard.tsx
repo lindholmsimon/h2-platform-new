@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DEMO_NOW } from "@/data/demo";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { formatDate } from "@/lib/utils";
 import { AddWidgetDialog } from "./add-widget-dialog";
 import { useDashboardLayout } from "./use-dashboard-layout";

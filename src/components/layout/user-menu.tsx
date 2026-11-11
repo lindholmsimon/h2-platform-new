@@ -13,11 +13,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 export function UserMenu({ variant = "compact", collapsed = false }: { variant?: "compact" | "sidebar"; collapsed?: boolean }) {
-  const { user, role } = useSession();
+  const { user, roles } = useSession();
+  const roleLabel = roles.map((r) => r.name).join(", ") || "Ingen roll";
 
   return (
     <DropdownMenu>
@@ -35,7 +36,7 @@ export function UserMenu({ variant = "compact", collapsed = false }: { variant?:
               <>
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-sm font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">{role.name}</span>
+                  <span className="text-muted-foreground truncate text-xs">{roleLabel}</span>
                 </div>
                 <ChevronsUpDown className="text-muted-foreground size-4" />
               </>

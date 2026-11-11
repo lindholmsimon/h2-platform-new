@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DEMO_PROJECTS, PROJECT_STATUS, type ProjectStatus } from "@/data/demo/projects";
 import { DEMO_USERS } from "@/data/demo/users";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 import { ProjectCard } from "./project-card";
 
@@ -46,7 +46,7 @@ export function ProjectList() {
         title="Projekt"
         description="Översikt över företagets projekt. Visar fiktiva exempelprojekt."
         actions={
-          can("projects.edit") && (
+          can("projects.create") && (
             <Button size="sm" disabled title="Kommer när databasen kopplas in">
               <Plus /> Nytt projekt
             </Button>

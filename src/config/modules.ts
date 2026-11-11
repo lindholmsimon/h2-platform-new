@@ -1,5 +1,6 @@
 import {
   FolderKanban,
+  History,
   LayoutDashboard,
   Plug,
   Settings,
@@ -7,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import type { Permission } from "@/lib/auth/types";
+import type { Permission } from "@/lib/auth/permissions";
 
 /**
  * Modulregister – källan till navigationen.
@@ -23,7 +24,8 @@ export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  permission: Permission;
+  /** Visas om användaren har minst en av behörigheterna. */
+  permission: Permission | readonly Permission[];
   /** Visas i mobilens bottennavigation. */
   mobile?: boolean;
 }
@@ -47,11 +49,28 @@ export const NAV_GROUPS: NavGroup[] = [
     id: "administration",
     label: "Administration",
     items: [
-      { id: "anvandare", label: "Användare & roller", href: "/administration/anvandare", icon: Users, permission: "admin.view", mobile: true },
-      { id: "integrationer", label: "Integrationer", href: "/administration/integrationer", icon: Plug, permission: "admin.view" },
-      { id: "installningar", label: "Inställningar", href: "/administration/installningar", icon: Settings, permission: "admin.view" },
+      {
+        id: "anvandare",
+        label: "Användare & roller",
+        href: "/administration/anvandare",
+        icon: Users,
+        permission: ["users.view", "roles.view"],
+        mobile: true,
+      },
+      { id: "historik", label: "Aktivitetslogg", href: "/administration/historik", icon: History, permission: "audit.view" },
+      { id: "integrationer", label: "Integrationer", href: "/administration/integrationer", icon: Plug, permission: "integrations.view" },
+      { id: "installningar", label: "Inställningar", href: "/administration/installningar", icon: Settings, permission: "settings.view" },
     ],
   },
+];
+
+/** Alla behörigheter som ger tillgång till någon del av administrationen. */
+export const ADMIN_PERMISSIONS: readonly Permission[] = [
+  "users.view",
+  "roles.view",
+  "audit.view",
+  "integrations.view",
+  "settings.view",
 ];
 
 export function isActive(pathname: string, href: string) {

@@ -12,14 +12,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { DEMO_USERS } from "@/data/demo/users";
-import { ROLES } from "@/lib/auth/roles";
+import { EffectivePermissions } from "@/components/admin/access/effective-permissions";
+import { RoleBadges } from "@/components/admin/access/role-badges";
+import { useAccess } from "@/lib/access/access-context";
+import { rolesOf } from "@/lib/auth/policy";
 import { useMounted } from "@/hooks/use-mounted";
-import { useSession } from "@/lib/auth/session-provider";
+import { useSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 export function ProfilePage() {
-  const { user, role, switchUser } = useSession();
+  const { user, roles, switchUser } = useSession();
+  const { snapshot } = useAccess();
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
 
@@ -36,8 +39,8 @@ export function ProfilePage() {
                 <h2 className="text-lg font-semibold">{user.name}</h2>
                 <p className="text-muted-foreground text-sm">{user.title}</p>
               </div>
-              <div className="flex gap-2">
-                <Badge>{role.name}</Badge>
+              <div className="flex flex-col items-center gap-2">
+                <RoleBadges roles={roles} />
                 <Badge variant="warning">Demoanvändare</Badge>
               </div>
               <ul className="text-muted-foreground flex w-full flex-col gap-2 border-t pt-4 text-left text-sm">
@@ -60,7 +63,7 @@ export function ProfilePage() {
               <CardDescription>Testa gränssnittet med olika roller och behörigheter.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
-              {DEMO_USERS.map((u) => {
+              {snapshot.users.map((u) => {
                 const active = u.id === user.id;
                 return (
                   <button
@@ -75,7 +78,11 @@ export function ProfilePage() {
                     <UserAvatar name={u.name} />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="text-sm font-medium">{u.name}</span>
-                      <span className="text-muted-foreground text-xs">{ROLES[u.roleId].name}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {rolesOf(snapshot, u)
+                          .map((r) => r.name)
+                          .join(", ") || "Ingen roll"}
+                      </span>
                     </div>
                     {active && <Check className="text-primary size-4" />}
                   </button>
@@ -110,6 +117,16 @@ export function ProfilePage() {
                   <Input id="phone" defaultValue={user.phone} />
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Mina behörigheter</CardTitle>
+              <CardDescription>Samlade behörigheter från dina roller.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EffectivePermissions userId={user.id} showMissing={false} />
             </CardContent>
           </Card>
 

@@ -1,0 +1,3 @@
+# Minimal konfiguration för Supabase CLI (lokal utveckling: `supabase start`).
+# Övriga inställningar använder CLI:ns standardvärden.
+project_id = "h2-platform"
