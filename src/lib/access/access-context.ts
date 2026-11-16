@@ -9,7 +9,7 @@ import type { AccessSnapshot, RoleInput, UserStatus } from "@/lib/auth/types";
  * Kontrakt för administration av användare och roller.
  *
  * Demoläget: DemoAccessProvider (fiktiv data i webbläsaren).
- * Riktigt läge (senare): en provider som anropar serveråtgärderna i
+ * Riktigt läge: AuthenticatedAccessProvider, som anropar serveråtgärderna i
  * src/server/admin/actions.ts, som i sin tur anropar databasfunktionerna.
  */
 export interface AccessActions {

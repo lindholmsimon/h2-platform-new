@@ -13,7 +13,7 @@ Intern företagsplattform för H2 Entreprenad. Byggd med Next.js 15 (App Router)
 - [Databasstruktur](#databasstruktur)
 - [Roller och behörigheter](#roller-och-behörigheter)
 - [Säkerhetsmodell](#säkerhetsmodell)
-- [Framtida Microsoft-inloggning](#framtida-microsoft-inloggning)
+- [Microsoft-inloggning](#microsoft-inloggning)
 - [Vad som fortfarande bara är demo](#vad-som-fortfarande-bara-är-demo)
 - [Projektstruktur](#projektstruktur)
 
@@ -36,6 +36,8 @@ npm run dev
 | `npm run lint`      | ESLint                                                       |
 | `npm run typecheck` | TypeScript-kontroll                                          |
 | `npm run test:db`   | Kör databasmigrationerna och testar RLS och skyddsregler     |
+| `npm run test:unit` | Enhetstester (t.ex. skydd mot öppen omdirigering)            |
+| `npm test`          | Alla tester                                                  |
 
 `npm run test:db` kör alla migrationer i [PGlite](https://pglite.dev) (Postgres i WebAssembly), alltså utan Docker eller molntjänst. Testerna kontrollerar bland annat att anonyma användare och `service_role` saknar åtkomst, att ingen kan ändra sina egna roller, att behörigheter inte kan delas ut "uppåt", att den sista systemadministratören skyddas och att aktivitetsloggen inte kan ändras.
 
@@ -138,18 +140,16 @@ npx supabase db reset
 
 ### Första systemadministratören
 
-Görs först när inloggningen är klar, i SQL-editorn i Supabase. Det kan inte göras via API eller webbplatsen:
+Görs i SQL-editorn i Supabase. Det kan inte göras via API eller webbplatsen:
 
 ```sql
 select private.bootstrap_system_admin(
-  'fornamn.efternamn@h2entreprenad.se',  -- e-post
-  'Förnamn Efternamn',                    -- namn
-  '<tenant-id>'::uuid,                    -- Entra ID tenant (tid)
-  '<object-id>'::uuid                     -- användarens object-ID (oid)
+  'fornamn.efternamn@h2entreprenad.se',  -- e-post (samma som Microsoft-kontot)
+  'Förnamn Efternamn'                     -- namn
 );
 ```
 
-Funktionen fungerar bara när det inte finns någon aktiv systemadministratör. Därefter hanteras alla roller via adminpanelen.
+Funktionen fungerar bara när det inte finns någon aktiv systemadministratör. Den kan köras före eller efter personens första inloggning. Profilen kopplas till Microsoft-kontot via den bekräftade e-postadressen. Därefter hanteras alla roller i adminpanelen.
 
 ### Nya migrationer
 
@@ -192,6 +192,9 @@ Alla tabeller har UUID som primärnyckel (`gen_random_uuid()`).
 | `public.admin_create_role` / `admin_update_role` / `admin_delete_role` | Hantera roller (kräver `roles.manage`).               |
 | `private.has_permission(key)`                  | Används av RLS-policies. Schemat `private` exponeras inte via API.           |
 | `private.bootstrap_system_admin(...)`          | Första administratören. Kan bara köras i SQL-editorn.                        |
+| `public.link_my_profile()`                     | Kopplar Microsoft-inloggningen till en profil (migration 6).                  |
+| `public.my_roles()`                            | Den inloggades egna roller med behörigheter.                                  |
+| `private.set_allowed_entra_tenant(uuid)`       | Sätter H2:s tillåtna Microsoft-tenant. Kan bara köras i SQL-editorn.          |
 
 ## Roller och behörigheter
 
@@ -246,26 +249,39 @@ Behörigheter kontrolleras i tre lager. Gränssnittet döljer bara knappar. Det 
 
 **Avstängt tills inloggning finns:** `AUTHENTICATION_IMPLEMENTED` och `REAL_ADMIN_OPERATIONS_ENABLED` i `src/server/config/security-flags.ts` är konstanter i koden, inte miljövariabler, och står på `false`. Serveråtgärderna i `src/server/admin/actions.ts` är dessutom inte kopplade till gränssnittet ännu. Det finns ingen endpoint som kan ge administratörsbehörighet.
 
-## Framtida Microsoft-inloggning
+## Microsoft-inloggning
 
-Planen använder **Supabase Auth med Azure-providern**. Det är inbyggt, kostar inget extra och ger en verifierad JWT som RLS kan använda via `auth.uid()`.
+Inloggningen använder **Supabase Auth med Azure-providern**. Det är inbyggt, kostar inget extra och ger en verifierad session som RLS använder via `auth.uid()`. **Koden är klar men avstängd** (`AUTHENTICATION_IMPLEMENTED = false` i `src/server/config/security-flags.ts`) tills den har testats med riktiga konton.
 
-1. **Appregistrering i Entra ID** (single tenant, H2:s tenant). Begär bara delegerade grundbehörigheter: `openid`, `profile`, `email` och `User.Read`. Inga administratörsroller i Microsoft 365 och ingen admin-consent för katalogändringar.
-2. **Supabase:** *Authentication → Providers → Azure.* Ange Client ID och secret samt tenant-URL `https://login.microsoftonline.com/<tenant-id>`, så att bara H2:s tenant kan logga in. Lägg till Vercel-domänen under *URL Configuration*.
-3. **Next.js:**
-   - Lägg till `middleware.ts` som förnyar sessionen med `@supabase/ssr`.
-   - Skapa en inloggningssida och en callback-route (`/auth/callback`) som byter koden mot en session.
-   - Låt `src/app/(platform)/layout.tsx` rendera plattformen för verifierade användare, och skicka icke inloggade till inloggningssidan i stället för `SecureModeGate`.
-   - Skapa en klientprovider som levererar `SessionContext` och `AccessContext` (`src/lib/auth/session.ts`, `src/lib/access/access-context.ts`) från `getVerifiedIdentity()` och `src/server/admin/`. Komponenterna behöver inte ändras.
-4. **Koppla profil till inloggning:** vid första inloggningen matchas profilen på **`tid` + `oid`** från Microsofts verifierade token, och `profiles.auth_user_id` sätts. Använd aldrig `user_metadata` eller e-post som enda identifierare. `user_metadata` kan ändras av användaren själv. Kopplingen görs i en `SECURITY DEFINER`-funktion som läser identitetsdata från `auth.identities`. Kontrollera vid implementationen vilka Microsoft-claims Supabase faktiskt sparar där (`oid`/`tid`), och lägg in dem via en server-side hook om de saknas.
-5. **Utse första systemadministratören** med `private.bootstrap_system_admin` (se ovan).
-6. **Slå på brytarna** `AUTHENTICATION_IMPLEMENTED` och `REAL_ADMIN_OPERATIONS_ENABLED` i en granskad kodändring, testa och ta sedan bort demoläget från produktion.
+### Så fungerar det
+
+1. `/logga-in` startar inloggningen med Microsoft (PKCE). Den begär bara `email` utöver grundbehörigheterna.
+2. `/auth/callback` byter engångskoden mot en session. Sessionen sparas i cookies med `httpOnly` och `secure`.
+3. `public.link_my_profile()` (migration 6) kopplar inloggningen till en profil:
+   - **Tenant:** tenant-ID läses från den verifierade identiteten i `auth.identities`, aldrig från `user_metadata`. Bara den tenant som satts med `private.set_allowed_entra_tenant()` släpps in. Är ingen satt nekas alla.
+   - **Profil:** befintlig profil matchas på kopplad inloggning, sedan tenant-ID + object-ID, sedan bekräftad e-post. Annars skapas en ny profil, aktiv men **utan roller**.
+   - **Misslyckas kopplingen** loggas personen ut direkt. Nya användare och kopplingar loggas i aktivitetsloggen.
+4. `middleware.ts` förnyar sessionen och skickar icke inloggade till `/logga-in`. Varje sida och serveråtgärd kontrollerar ändå inloggningen igen på servern (`getAuthState`, `requirePermission`), och databasen gör det med RLS.
+5. Inloggade utan roll ser *Väntar på behörighet*. Inaktiva konton ser *Kontot har ingen åtkomst*.
+
+Gäster i H2:s tenant, till exempel en extern utvecklare, kan logga in på samma sätt och får en roll av en systemadministratör.
+
+### Checklista för att slå på inloggningen
+
+1. **Entra ID:** appregistrering enligt manualen till IT (single tenant, `openid`, `profile`, `email`, `User.Read`, `xms_edov`).
+2. **Supabase → Authentication → Providers → Azure:** slå på och ange Client ID, klienthemlighetens *Value* och *Azure Tenant URL* `https://login.microsoftonline.com/<tenant-id>`.
+3. **Supabase → Authentication → URL Configuration:** *Site URL* = produktionsadressen. *Redirect URLs* = `https://<produktionsdomän>/auth/callback`, Vercels preview-adresser (t.ex. `https://*-<team>.vercel.app/auth/callback`) och `http://localhost:3000/auth/callback`.
+4. **Supabase → SQL-editorn:** `select private.set_allowed_entra_tenant('<tenant-id>');`
+5. **Vercel:** `NEXT_PUBLIC_SUPABASE_URL` och `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` för Production och Preview. `H2_DEMO_MODE` ska inte vara satt i miljön där inloggningen testas.
+6. **Kodändring:** sätt `AUTHENTICATION_IMPLEMENTED = true` i en egen PR och testa i dess preview.
+7. **Första systemadministratören** (se ovan). Personen loggar in och tilldelar sedan roller i adminpanelen.
+8. **När rolländringar är testade:** sätt `REAL_ADMIN_OPERATIONS_ENABLED = true` i en egen PR.
 
 ## Vad som fortfarande bara är demo
 
-- **Inloggning:** finns inte. Demoläget har fiktiva användare med fritt byte mellan dem.
-- **Adminpanelen:** fungerar mot fiktiv data i webbläsaren. Databasfunktionerna och serveråtgärderna är klara men avstängda.
-- **Bjuda in användare:** knappen är inaktiverad. Användare kommer att skapas via Entra ID.
+- **Inloggning:** byggd men avstängd tills den är testad med riktiga konton (se *Microsoft-inloggning*). Demoläget har fiktiva användare med fritt byte mellan dem.
+- **Adminpanelen:** fungerar mot fiktiv data i demoläget. Vid riktig inloggning visar den riktiga användare och roller, men ändringar är avstängda (`REAL_ADMIN_OPERATIONS_ENABLED`) tills de är testade.
+- **Bjuda in användare:** knappen är inaktiverad. Användare skapas automatiskt vid första inloggningen, utan roller.
 - **Projekt, dashboard, kalender och notiser:** fiktiva exempeldata (`src/data/demo/`). De är inte flyttade till databasen.
 - **Integrationer (Microsoft 365, Dropbox, Claude) och plattformsinställningar:** bara gränssnitt.
 
@@ -277,6 +293,9 @@ supabase/
 ├── seed.sql                  # FIKTIVA testanvändare – endast lokalt
 └── tests/                    # Databastester (npm run test:db)
 src/
+├── middleware.ts             # Förnyar Supabase-sessionen, skickar icke inloggade till /logga-in
+├── app/logga-in/             # Inloggningssidan
+├── app/auth/callback/        # Mottagning efter Microsoft-inloggning
 ├── app/(platform)/           # Routes. layout.tsx väljer demoläge eller säkert läge
 ├── assets/brand/             # Logotyp (ljus/mörk variant + märke). Favicon/ikoner i src/app/
 │   └── administration/       # anvandare, historik, integrationer, installningar

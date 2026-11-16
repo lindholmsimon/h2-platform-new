@@ -14,10 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/lib/auth/session";
+import { signOut } from "@/server/auth/actions";
 import { cn } from "@/lib/utils";
 
 export function UserMenu({ variant = "compact", collapsed = false }: { variant?: "compact" | "sidebar"; collapsed?: boolean }) {
-  const { user, roles } = useSession();
+  const { user, roles, mode } = useSession();
   const roleLabel = roles.map((r) => r.name).join(", ") || "Ingen roll";
 
   return (
@@ -60,12 +61,24 @@ export function UserMenu({ variant = "compact", collapsed = false }: { variant?:
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">Byt demoanvändare</DropdownMenuLabel>
-        <DemoUserMenuItems />
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
-          <LogOut /> Logga ut (kommer med Entra ID)
-        </DropdownMenuItem>
+        {mode === "demo" ? (
+          <>
+            <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">Byt demoanvändare</DropdownMenuLabel>
+            <DemoUserMenuItems />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled>
+              <LogOut /> Logga ut (finns inte i demoläget)
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <form action={signOut}>
+            <DropdownMenuItem asChild>
+              <button type="submit" className="w-full">
+                <LogOut /> Logga ut
+              </button>
+            </DropdownMenuItem>
+          </form>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

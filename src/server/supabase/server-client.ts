@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import { isDemoMode } from "@/server/config/app-mode";
-import { getSupabaseConfig } from "@/server/config/env";
+import { getSupabaseConfig, SUPABASE_COOKIE_OPTIONS } from "@/server/config/env";
 
 export class SupabaseUnavailableError extends Error {}
 
@@ -26,6 +26,7 @@ export async function createSupabaseServerClient() {
 
   const cookieStore = await cookies();
   return createServerClient(config.url, config.key, {
+    cookieOptions: SUPABASE_COOKIE_OPTIONS,
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (toSet) => {

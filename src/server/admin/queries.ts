@@ -3,6 +3,7 @@ import "server-only";
 import { isPermission, type Permission } from "@/lib/auth/permissions";
 import type { AccessRole, AccessSnapshot, AccessUser, AuditEntry, UserStatus } from "@/lib/auth/types";
 import { requirePermission } from "@/server/auth/guards";
+import type { VerifiedIdentity } from "@/server/auth/identity";
 import { createSupabaseServerClient } from "@/server/supabase/server-client";
 
 /**
@@ -114,4 +115,51 @@ export async function loadAuditLog(limit = 200): Promise<AuditEntry[]> {
       ? { added: toPermissions(row.details.added), removed: toPermissions(row.details.removed) }
       : undefined,
   }));
+}
+
+interface MyRoleRow {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  is_system: boolean;
+  is_locked: boolean;
+  permissions: string[];
+}
+
+/**
+ * Data för den inloggades session. Administratörer (users.view / roles.view)
+ * får hela katalogen; övriga bara sin egen profil och sina egna roller.
+ */
+export async function loadSnapshotForIdentity(identity: VerifiedIdentity): Promise<AccessSnapshot> {
+  if (identity.permissions.has("users.view") || identity.permissions.has("roles.view")) {
+    return loadAccessSnapshot();
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("my_roles");
+  if (error) throw error;
+
+  const roles: AccessRole[] = ((data ?? []) as MyRoleRow[]).map((r) => ({
+    id: r.id,
+    key: r.key,
+    name: r.name,
+    description: r.description,
+    isSystem: r.is_system,
+    isLocked: r.is_locked,
+    permissions: toPermissions(r.permissions),
+  }));
+
+  const self: AccessUser = {
+    id: identity.profile.id,
+    name: identity.profile.displayName,
+    email: identity.profile.email,
+    title: identity.profile.jobTitle,
+    department: identity.profile.department,
+    phone: "",
+    status: identity.profile.status,
+    roleIds: roles.map((r) => r.id),
+  };
+
+  return { users: [self], roles, audit: [] };
 }

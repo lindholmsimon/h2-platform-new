@@ -3,6 +3,7 @@
 import { FlaskConical, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { useSession } from "@/lib/auth/session";
 import { Brand } from "./brand";
 import { MobileMenu } from "./mobile-nav";
 import { NotificationsMenu } from "./notifications-menu";
@@ -10,6 +11,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 
 export function Topbar() {
+  const { mode } = useSession();
   return (
     <header className="bg-background/90 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30 flex h-16 items-center gap-2 border-b px-4 backdrop-blur md:px-6">
       <MobileMenu />
@@ -25,9 +27,11 @@ export function Topbar() {
         />
       </div>
       <div className="ml-auto flex items-center gap-1">
-        <Badge variant="warning" className="mr-1 hidden sm:inline-flex">
-          <FlaskConical /> Demoläge
-        </Badge>
+        {mode === "demo" && (
+          <Badge variant="warning" className="mr-1 hidden sm:inline-flex">
+            <FlaskConical /> Demoläge
+          </Badge>
+        )}
         <ThemeToggle />
         <NotificationsMenu />
         <div className="ml-1">

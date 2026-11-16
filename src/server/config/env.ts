@@ -15,3 +15,15 @@ export function getSupabaseConfig() {
   if (!url || !key) return null;
   return { url, key };
 }
+
+/**
+ * Cookie-inställningar för Supabase-sessionen. Plattformen använder aldrig
+ * Supabase från webbläsaren, så cookies görs oläsbara för JavaScript
+ * (httpOnly) och skickas bara över HTTPS i produktion.
+ */
+export const SUPABASE_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};

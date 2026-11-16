@@ -21,7 +21,7 @@ import { useSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 export function ProfilePage() {
-  const { user, roles, switchUser } = useSession();
+  const { user, roles, switchUser, mode } = useSession();
   const { snapshot } = useAccess();
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
@@ -41,7 +41,7 @@ export function ProfilePage() {
               </div>
               <div className="flex flex-col items-center gap-2">
                 <RoleBadges roles={roles} />
-                <Badge variant="warning">Demoanvändare</Badge>
+                {mode === "demo" && <Badge variant="warning">Demoanvändare</Badge>}
               </div>
               <ul className="text-muted-foreground flex w-full flex-col gap-2 border-t pt-4 text-left text-sm">
                 <li className="flex items-center gap-2">
@@ -57,39 +57,41 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Byt demoanvändare</CardTitle>
-              <CardDescription>Testa gränssnittet med olika roller och behörigheter.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {snapshot.users.map((u) => {
-                const active = u.id === user.id;
-                return (
-                  <button
-                    key={u.id}
-                    onClick={() => switchUser(u.id)}
-                    className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-lg border p-2.5 text-left transition-colors",
-                      active ? "border-primary bg-primary/5" : "hover:bg-accent",
-                    )}
-                    aria-pressed={active}
-                  >
-                    <UserAvatar name={u.name} />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="text-sm font-medium">{u.name}</span>
-                      <span className="text-muted-foreground text-xs">
-                        {rolesOf(snapshot, u)
-                          .map((r) => r.name)
-                          .join(", ") || "Ingen roll"}
-                      </span>
-                    </div>
-                    {active && <Check className="text-primary size-4" />}
-                  </button>
-                );
-              })}
-            </CardContent>
-          </Card>
+          {mode === "demo" && switchUser && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Byt demoanvändare</CardTitle>
+                <CardDescription>Testa gränssnittet med olika roller och behörigheter.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                {snapshot.users.map((u) => {
+                  const active = u.id === user.id;
+                  return (
+                    <button
+                      key={u.id}
+                      onClick={() => switchUser(u.id)}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-3 rounded-lg border p-2.5 text-left transition-colors",
+                        active ? "border-primary bg-primary/5" : "hover:bg-accent",
+                      )}
+                      aria-pressed={active}
+                    >
+                      <UserAvatar name={u.name} />
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-sm font-medium">{u.name}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {rolesOf(snapshot, u)
+                            .map((r) => r.name)
+                            .join(", ") || "Ingen roll"}
+                        </span>
+                      </div>
+                      {active && <Check className="text-primary size-4" />}
+                    </button>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-2">
