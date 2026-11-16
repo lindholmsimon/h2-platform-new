@@ -15,7 +15,7 @@ export function DemoUserMenuItems() {
   return (
     <>
       {snapshot.users.map((u) => (
-        <DropdownMenuItem key={u.id} onSelect={() => switchUser(u.id)} className="gap-2.5">
+        <DropdownMenuItem key={u.id} onSelect={() => switchUser?.(u.id)} className="gap-2.5">
           <UserAvatar name={u.name} className="size-6 text-[10px]" />
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate">{u.name}</span>

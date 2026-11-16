@@ -20,6 +20,9 @@ import { formatDate } from "@/lib/utils";
 
 const ACTIONS: Record<AuditAction, { label: string; group: Filter }> = {
   "system.bootstrap_admin": { label: "Första administratör", group: "system" },
+  "system.allowed_tenant_set": { label: "Tillåten tenant", group: "system" },
+  "user.created": { label: "Ny användare", group: "users" },
+  "user.linked": { label: "Konto kopplat", group: "users" },
   "user.role_assigned": { label: "Roll tilldelad", group: "users" },
   "user.role_revoked": { label: "Roll borttagen", group: "users" },
   "user.status_changed": { label: "Status ändrad", group: "users" },

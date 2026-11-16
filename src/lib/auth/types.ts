@@ -44,6 +44,9 @@ export interface AccessUser {
 
 export type AuditAction =
   | "system.bootstrap_admin"
+  | "system.allowed_tenant_set"
+  | "user.created"
+  | "user.linked"
   | "user.role_assigned"
   | "user.role_revoked"
   | "user.status_changed"
